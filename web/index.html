@@ -1,0 +1,59 @@
+<!DOCTYPE>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    #output {
+      width: 100%;
+      height: 100%;
+      box-sizing: border-box;
+    }
+    #status-ind {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+    }
+  </style>
+  <script src="https://rawgit.com/ken107/databind-js/master/databind.js"></script>
+  <script>
+    var recorder = createRecorder();
+    var state = {
+      isRecording: false,
+      interimResult: null
+    };
+
+    function createRecorder() {
+      var rec = new webkitSpeechRecognition()
+      rec.lang = "vi";
+      rec.continuous = true;
+      rec.interimResults = true;
+      rec.onstart = function() {state.isRecording = true};
+      rec.onend = function() {state.isRecording = false};
+      rec.onresult = function(event) {onResult(event.results[0])};
+      return rec;
+    }
+
+    function onResult(result) {
+      var text = document.getElementById("output").value;
+      if (state.interimResult) {
+        text = text.substring(0, text.length-state.interimResult.length);
+        state.interimResult = null;
+      }
+      if (result.isFinal) {
+        document.getElementById("output").value = text + result[0].transcript + " ";
+      }
+      else {
+        document.getElementById("output").value = text + result[0].transcript;
+        state.interimResult = result[0].transcript;
+      }
+    }
+  </script>
+</head>
+<body>
+  <textarea id="output"></textarea>
+  <div id="status-ind"
+    bind-statement-1="thisElem.innerHTML = #state.isRecording ? 'Recording...' : 'Record'"
+    bind-statement-2="thisElem.style.color = #state.isRecording ? 'red' : ''"
+    bind-event-click="#state.isRecording ? recorder.stop() : recorder.start()"></div>
+</body>
+</html>
